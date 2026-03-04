@@ -1,0 +1,7 @@
+services:
+  weather-story:
+    container_name: weather-story
+    build: .
+    ports:
+      - "8501:8501"
+    restart: unless-stopped

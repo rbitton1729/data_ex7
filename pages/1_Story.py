@@ -7,6 +7,7 @@ from charts.charts import (
     chart_context_seasonality,
     chart_surprise_extremes,
     chart_explain_precip_vs_temp,
+    chart_new_static_avg_precip_by_month,
 )
 
 st.set_page_config(page_title="Story", layout="wide")
@@ -38,3 +39,8 @@ st.header("4) Precipitation vs temperature")
 st.write("We wish to test a plausible explanation: are the warmest days also the driest (or not)?")
 st.altair_chart(chart_explain_precip_vs_temp(df), use_container_width=True)
 st.caption("Takeaway: The relationship is noisy — precipitation alone does not explain extreme heat, motivating more fine-grained exploration.")
+
+st.header("5) New static view: average precipitation by month")
+st.write("This added static chart summarizes precipitation seasonality with a monthly aggregation.")
+st.altair_chart(chart_new_static_avg_precip_by_month(df), use_container_width=True)
+st.caption("Takeaway: Wet-season months have noticeably higher average daily precipitation than summer months.")

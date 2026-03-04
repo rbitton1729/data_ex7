@@ -107,3 +107,63 @@ def chart_dashboard(df: pd.DataFrame) -> alt.Chart:
     )
 
     return alt.vconcat(line, hist).resolve_scale(color="independent")
+
+def chart_new_static_avg_precip_by_month(df: pd.DataFrame) -> alt.Chart:
+    month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    return (
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            x=alt.X("month_name:N", title="Month", sort=month_order),
+            y=alt.Y("mean(precipitation):Q", title="Average daily precipitation (in)"),
+            tooltip=[
+                alt.Tooltip("month_name:N", title="Month"),
+                alt.Tooltip("mean(precipitation):Q", title="Avg precipitation", format=".2f"),
+            ],
+        )
+        .properties(height=320)
+    )
+
+def chart_new_interactive_temp_minmax(df: pd.DataFrame) -> alt.Chart:
+    weather_options = ["all"] + sorted(df["weather"].unique().tolist())
+    weather_filter = alt.param(
+        name="weather_filter",
+        bind=alt.binding_select(options=weather_options, name="Weather type: "),
+        value="all",
+    )
+    brush = alt.selection_interval(encodings=["x", "y"], name="Range")
+
+    scatter = (
+        alt.Chart(df)
+        .transform_filter("weather_filter == 'all' || datum.weather == weather_filter")
+        .mark_circle(size=48, opacity=0.55)
+        .encode(
+            x=alt.X("temp_min:Q", title="Daily min temp (°C)"),
+            y=alt.Y("temp_max:Q", title="Daily max temp (°C)"),
+            color=alt.Color("weather:N", title="Weather"),
+            tooltip=[
+                alt.Tooltip("date:T"),
+                alt.Tooltip("weather:N"),
+                alt.Tooltip("temp_min:Q", format=".1f"),
+                alt.Tooltip("temp_max:Q", format=".1f"),
+            ],
+        )
+        .add_params(weather_filter, brush)
+        .properties(height=280)
+    )
+
+    summary = (
+        alt.Chart(df)
+        .transform_filter("weather_filter == 'all' || datum.weather == weather_filter")
+        .transform_filter(brush)
+        .transform_calculate(temp_range="datum.temp_max - datum.temp_min")
+        .mark_bar()
+        .encode(
+            x=alt.X("temp_range:Q", bin=alt.Bin(maxbins=24), title="Daily temperature range (°C)"),
+            y=alt.Y("count():Q", title="Days in selected scatter region"),
+            tooltip=[alt.Tooltip("count():Q", title="Days")],
+        )
+        .properties(height=220)
+    )
+
+    return alt.vconcat(scatter, summary)
